@@ -9,6 +9,7 @@ function loadVue() {
 		`
 	})
 
+
 // data = a function returning the content (actually HTML)
 	Vue.component('raw-html', {
 			props: ['layer', 'data'],
@@ -179,7 +180,7 @@ function loadVue() {
 				<span v-if= "tmp[layer].upgrades[data].title"><h3 v-html="tmp[layer].upgrades[data].title"></h3><br></span>
 				<span v-html="tmp[layer].upgrades[data].description"></span>
 				<span v-if="layers[layer].upgrades[data].effectDisplay"><br>Currently: <span v-html="run(layers[layer].upgrades[data].effectDisplay, layers[layer].upgrades[data])"></span></span>
-				<br><br>Cost: {{ formatWhole(tmp[layer].upgrades[data].cost) }} {{(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : tmp[layer].resource)}}
+				<br><br>Cost: {{ formatWhole(tmp[layer].upgrades[data].cost) }} {{(tmp[layer].upgrades[data].currencyDisplayName ? tmp[layer].upgrades[data].currencyDisplayName : prettifyResourceName(tmp[layer]))}}
 			</span>
 			<tooltip v-if="tmp[layer].upgrades[data].tooltip" :text="tmp[layer].upgrades[data].tooltip"></tooltip>
 
@@ -214,42 +215,100 @@ function loadVue() {
 		`
 	})
 
+	// Vue.component('toggle', {
+	// 	props: ['layer', 'data'],
+	// 	template: `
+	// 	<button class="smallUpg can" v-bind:style="{'background-color': tmp[data[0]].color}" v-on:click="toggleAuto(data)">{{player[data[0]][data[1]]?"ON":"OFF"}}</button>
+	// 	`=
+	// })
+
+	// modified toggle, accepts dot pathing (im so cracked)
 	Vue.component('toggle', {
 		props: ['layer', 'data'],
 		template: `
-		<button class="smallUpg can" v-bind:style="{'background-color': tmp[data[0]].color}" v-on:click="toggleAuto(data)">{{player[data[0]][data[1]]?"ON":"OFF"}}</button>
-		`
-	})
+			<button class="smallUpg can"
+				:style="{ 'background-color': tmp[layer]?.color || '#fff' }"
+				@click="toggleAuto()">
+				{{ getValue ? 'ON' : 'OFF' }}
+			</button>
+		`,
+		computed: {
+			getValue() {
+				// return the final value
+				let [path, final] = this.getPath()
+				return path[final];
+			}
+		},
+		methods: {
+			getPath() {
+				// variables
+				let layer = this.layer
+				let data = this.data[1]
+				let patharray = data.split(".");
+
+				// get last key and pop array
+				let finalKey = patharray[patharray.length - 1];
+				patharray.pop();
+				if (patharray.length <= 1) {
+					return patharray[0], finalKey
+				}
+
+				// get pathing
+				let truePath
+				for (let i = 0; i < patharray.length; i++) {
+					if (truePath) {
+						truePath = truePath[patharray[i]];
+					} else {
+						truePath = player[layer][patharray[i]];
+					}
+				}
+				return [truePath, finalKey]
+			},
+			toggleAuto() {
+				let [path, final] = this.getPath()
+				path[final] = !path[final]
+			}
+		}
+	});
+
 
 	Vue.component('prestige-button', {
-		props: ['layer', 'data'],
-		template: `
-		<button v-if="(tmp[layer].type !== 'none')" v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset}"
-			v-bind:style="[tmp[layer].canReset ? {'background-color': tmp[layer].color} : {}, tmp[layer].componentStyles['prestige-button']]"
-			v-html="prestigeButtonText(layer)" v-on:click="doReset(layer)">
+	props: ['layer', 'data'],
+	template: `
+		<button 
+		v-if="tmp[layer].type !== 'none' && (!tmp[layer].passiveGeneration || tmp[layer].passiveGeneration === 0)" 
+		v-bind:class="{ [layer]: true, reset: true, locked: !tmp[layer].canReset, can: tmp[layer].canReset }"
+		v-bind:style="[tmp[layer].canReset ? { 'background-color': tmp[layer].color } : {}, tmp[layer].componentStyles['prestige-button']]"
+		v-html="prestigeButtonText(layer)" 
+		v-on:click="doReset(layer)">
 		</button>
-		`
-	
+	`
 	})
 
+
 	// Displays the main resource for the layer
+
+	// hook:point_formatting
 	Vue.component('main-display', {
 		props: ['layer', 'data'],
 		template: `
-		<div><span v-if="player[layer].points.lt('1e1000')">You have </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px ' + tmp[layer].color}">{{data ? format(player[layer].points, data) : formatWhole(player[layer].points)}}</h2> {{tmp[layer].resource}}<span v-if="layers[layer].effectDescription">, <span v-html="run(layers[layer].effectDescription, layers[layer])"></span></span><br><br></div>
+		<div><span v-if="player[layer].points.lt('1e1000')">{{prettifyResourceName(tmp[layer])}}: </span><h2 v-bind:style="{'color': tmp[layer].color, 'text-shadow': '0px 0px 10px ' + tmp[layer].color}">{{data ? format(player[layer].points, data) : formatWhole(player[layer].points)}}</h2><span v-if="layers[layer].effectDescription">, <span v-html="run(layers[layer].effectDescription, layers[layer])"></span></span><br><br></div>
 		`
 	})
 
 	// Displays the base resource for the layer, as well as the best and total values for the layer's currency, if tracked
+	
+	// hook:point_formatting
 	Vue.component('resource-display', {
 		props: ['layer'],
 		template: `
 		<div style="margin-top: -13px">
-			<span v-if="tmp[layer].baseAmount"><br>You have {{formatWhole(tmp[layer].baseAmount)}} {{tmp[layer].baseResource}}</span>
-			<span v-if="tmp[layer].passiveGeneration"><br>You are gaining {{format(tmp[layer].resetGain.times(tmp[layer].passiveGeneration))}} {{tmp[layer].resource}} per second</span>
-			<br><br>
-			<span v-if="tmp[layer].showBest">Your best {{tmp[layer].resource}} is {{formatWhole(player[layer].best)}}<br></span>
-			<span v-if="tmp[layer].showTotal">You have made a total of {{formatWhole(player[layer].total)}} {{tmp[layer].resource}}<br></span>
+			<span v-if="tmp[layer]?.passiveGeneration && (typeof tmp[layer].passiveGeneration==='function'?tmp[layer].passiveGeneration():tmp[layer].passiveGeneration)>0" class="neon-text"><br>Passive Generation: {{formatWhole(tmp[layer].resetGain.times(typeof tmp[layer].passiveGeneration==='function'?tmp[layer].passiveGeneration():tmp[layer].passiveGeneration))}}/s</span>
+			<br>
+			<span   v-if="tmp[layer].passiveGeneration && tmp[layer].passiveGeneration > 0" ><br>{{ prettifyResourceName(null,tmp[layer].baseResource) }}: {{ formatWhole(tmp[layer].baseAmount) }}</span>
+			<br>
+			<span v-if="tmp[layer].showBest">Highest {{prettifyResourceName(tmp[layer])}} Obtained: {{formatWhole(player[layer].best)}}<br></span>
+			<span v-if="tmp[layer].showTotal">Total {{prettifyResourceName(tmp[layer])}}: {{formatWhole(player[layer].total)}} <br></span>
 		</div>
 		`
 	})

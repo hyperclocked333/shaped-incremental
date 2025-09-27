@@ -258,14 +258,19 @@ function toNumber(x) {
 function updateMilestones(layer) {
 	if (tmp[layer].deactivated) return
 	for (id in layers[layer].milestones) {
-		if (!(hasMilestone(layer, id)) && layers[layer].milestones[id].done()) {
+		let milestone = layers[layer].milestones[id]
+		if (!milestone.unlocked || (typeof milestone.unlocked === "function" && !milestone.unlocked())) continue
+		if (!hasMilestone(layer, id) && milestone.done()) {
 			player[layer].milestones.push(id)
-			if (layers[layer].milestones[id].onComplete) layers[layer].milestones[id].onComplete()
-			if ((tmp[layer].milestonePopups || tmp[layer].milestonePopups === undefined) && !options.hideMilestonePopups) doPopup("milestone", tmp[layer].milestones[id].requirementDescription, "Milestone Gotten!", 3, tmp[layer].color);
+			if (milestone.onComplete) milestone.onComplete()
+			if ((tmp[layer].milestonePopups || tmp[layer].milestonePopups === undefined) && !options.hideMilestonePopups) {
+				doPopup("milestone", tmp[layer].milestones[id].requirementDescription, "Milestone Gotten!", 3, tmp[layer].color)
+			}
 			player[layer].lastMilestone = id
 		}
 	}
 }
+
 
 function updateAchievements(layer) {
 	if (tmp[layer].deactivated) return
@@ -382,7 +387,6 @@ function doPopup(type = "none", text = "This is a test popup.", title = "", time
 	popupID++;
 }
 
-
 //Function to reduce time on active popups
 function adjustPopupTime(diff) {
 	for (popup in activePopups) {
@@ -410,3 +414,4 @@ function gridRun(layer, func, data, id) {
 	else
 		return layers[layer].grid[func];
 }
+

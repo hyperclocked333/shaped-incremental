@@ -15,13 +15,13 @@ function getStartOptions() {
 		oldStyle: false,
 		forceTooltips: true,
 		hideMilestonePopups: false,
+		scientificNotation: false,
 	}
 }
 
 function toggleOpt(name) {
 	if (name == "oldStyle" && styleCooldown > 0)
 		return;
-
 	options[name] = !options[name];
 	if (name == "hqTree")
 		changeTreeQuality();

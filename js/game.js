@@ -7,6 +7,80 @@ const TMT_VERSION = {
 	tmtName: "Δ"
 }
 
+// prettier subtabs :glitter:
+function prettifyResourceName(layer, exactString = null) {
+	let str;
+	let specifiedName = layer?.prettyResourceName
+	let regularName = layer?.resource
+	if (specifiedName) {
+		str = specifiedName
+	} else if (regularName) {
+		str = regularName
+	} else if (exactString) {
+		str = exactString
+	} else {
+		return
+	};
+	str = str.split(' ').map(word => {
+		if (!word) return ''
+		if (word.startsWith('/nc')) return word.slice(3)
+		return word[0].toUpperCase() + word.slice(1)
+	}).join(' ')
+	return str
+}
+
+
+/**
+ * returns a be decimal
+ * @param {number|string} number defualt: 1
+ * @returns {Decimal}
+ */
+function dec(number = 1) {
+	return new Decimal(number)
+}
+
+/**
+ * Description
+ * @param {number|string} base default: Decimal(1)
+ * @returns {object}
+ */
+function buildScaleableValue(base = dec()) {
+	if (!(base instanceof Decimal)) base = dec(base);
+	function getCondition(condition) {
+		if (typeof condition === "boolean") return condition;
+		if (typeof condition === "function") return condition();
+		return false;
+	};
+	function normalizeOutput(out) {
+		if (typeof out === "function") return out();
+		return out;
+	}
+	return {
+		value: base,
+		get() {return this.value},
+		times(condition, amt) {
+			if (getCondition(condition)) {
+				this.value = (this.value).times(normalizeOutput(amt));
+			}
+			return this;
+		},
+		pow(condition, amt) {
+			if (getCondition(condition)) {
+				this.value = (this.value).pow(normalizeOutput(amt));
+			}
+			return this;
+		},
+		div(condition, amt) {
+			if (getCondition(condition)) {
+				this.value = (this.value).div(normalizeOutput(amt));
+			}
+			return this;
+		},
+
+		mul( condition, amt ) {return this.times( condition, amt )},
+	}
+}
+
 function getResetGain(layer, useType = null) {
 	let type = useType
 	if (!useType){ 
@@ -434,3 +508,4 @@ var interval = setInterval(function() {
 }, 50)
 
 setInterval(function() {needCanvasUpdate = true}, 500)
+
