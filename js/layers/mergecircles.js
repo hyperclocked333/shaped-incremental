@@ -10,7 +10,11 @@ addLayer("mc", {
     milestone0: false,
     color: "#ffffffff",
     resetDescription: "Merge for ",
-    passiveGeneration() { return player[this.layer].milestone0 ? 1 : 0 },
+    passiveGeneration() { if (player[this.layer].milestone0) {
+        if (hasUpgrade("mc", 23)) {return 0.02}
+        
+        return 0.01
+    } else {return 0}},
     canReset() { return (!player[this.layer].milestone0) },
     milestonePopups() { return (!player[this.layer].milestone0) },
     autoUpgrade() { return player.a.automation[this.layer].upgrades },
@@ -48,12 +52,6 @@ addLayer("mc", {
             .times(hasMilestone("t", 2) && hasMilestone("mc", 5), 9)
             .times(hasUpgrade("t", 21), 1.4)
 			.times(hasUpgrade("c", 12), 3)
-
-
-            .div(player[this.layer].milestone0,  () => {
-                if (hasUpgrade("mc", 23)) {return 50}
-                return 100
-            })
 
         return mult.get()
     },
