@@ -71,7 +71,7 @@ let electricity = addLayer("e", {
                     if ((gm && ge && dr) && (typeof gm === "function" && typeof ge === "function" && typeof dr === "function")) {
                         let next;
                         const getDevSpeed = () => {
-                            return Decimal.max(dec-(player.devSpeed), 1)
+                            return Decimal.max(dec(player.devSpeed), 1)
                         }
                         let gain = 
                         new Decimal(0.01)
