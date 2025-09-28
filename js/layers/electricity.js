@@ -69,14 +69,17 @@ let electricity = addLayer("e", {
                     let dr = layers["e"]?.directMult || null
 
                     if ((gm && ge && dr) && (typeof gm === "function" && typeof ge === "function" && typeof dr === "function")) {
-                        let next
+                        let next;
+                        const getDevSpeed = () => {
+                            return Decimal.max(dec-(player.devSpeed), 1)
+                        }
                         let gain = 
                         new Decimal(0.01)
                             .times(gm())
                             .pow(ge())
                             .times(dr())
-                            .times(player.devSpeed)
-                        
+                            .times(getDevSpeed())     
+                                              
                         switch (true) {
                             case hasUpgrade("t",11): 
                                 next = softcap((player["e"].points).plus(gain), player["e"].wattcap.times(1.33), new Decimal(0.9));
@@ -90,7 +93,6 @@ let electricity = addLayer("e", {
                                 ? player.e.points = next
                                 : player.e.points = player.e.points
                     }
-                    
 
                 }
                 gainElectricity()
