@@ -6,7 +6,7 @@ addLayer("pentaline", {
             unlockOrder: ["c","t","l","mc"],
         }
     },
-
+    layerShown() { return player.c.points.gte(1e51) },
     row: 3,
     position: 2,
     symbol: "P",                       
