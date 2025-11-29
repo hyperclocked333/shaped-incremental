@@ -3,12 +3,26 @@ addLayer("l", {
     position: 0, // Horizontal position within a row. By default it uses the layer id and sorts in alphabetical order
     startData() { return {
         unlocked: true,
-		points: new Decimal(0),
-        best: new Decimal(0),
+		points: dec(0),
+        best: dec(0),
         milestonesUnlocked: false,
     }},
     color: "#ffffffff",
     branches: ["mc"],
+    milestonePopups() { return (!player.c.unlocked) },
+    resetsNothing() { return hasUpgrade("c", 52) },
+    autoUpgrade() { return player.a.automation[this.layer].upgrades },
+    automate() {
+        if (player.a.automation[this.layer].buyables) {
+            let b = this.buyables
+            Object.values(b).forEach(element => {
+                if (typeof element === "object") {
+                    element.buyMax()
+                }
+                
+            });
+        }
+    },
     requires: new Decimal(1e6), // Can be a function that takes requirement increases into account
     resetDescription: "Linify for ",
     resource: "lines", // Name of prestige currency
@@ -31,11 +45,21 @@ addLayer("l", {
             .times(hasUpgrade("l", 22), 1.5)
             .times(hasMilestone("c", 1), 1.2)
             .times(hasMilestone("t", 4), 1.2)
+            .times(hasUpgrade("c", 22), upgradeEffect("c", 22))
+            .times(hasUpgrade("c", 33), 333)
+            .times(hasUpgrade("c", 32), 5)
+            .times(hasUpgrade("c", 42), upgradeEffect("c", 42))
+            .times(hasMilestone("t", 9), getMilestoneEffect("t", 9))
+            .times(hasMilestone("t", 11), 5)
+			.times(hasMilestone("t", 13), 10)
 
         return mult.get()
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
-        return new Decimal(1)
+        let exp = dec()
+        if (hasUpgrade("c", 52)) {exp = exp.plus(0.1)}
+
+        return exp
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
@@ -43,13 +67,13 @@ addLayer("l", {
         11: {
             title: "Upgrade 1:1",
             description: "3x Circle gain.",
-            cost: new Decimal(1),
+            cost: dec(),
         },
         12: {
             title: "Upgrade 1:2",
             description: "Circles are lightly boosted based on the highest amount of lines you have this reset.",
             effect() {
-                return new Decimal(1).plus(player[this.layer].best.pow(0.25))
+                return dec().plus(player[this.layer].best.pow(0.25))
             },
             effectDisplay() {
                 return format(upgradeEffect(this.layer, this.id))+"x"
@@ -85,7 +109,7 @@ addLayer("l", {
             description: "Circles slightly boost themselves.",
             cost: new Decimal(750),
             effect() {
-                return new Decimal(1).plus(player.points.pow(0.1).div(3))
+                return dec().plus(player.points.pow(0.1).div(3))
             },
             effectDisplay() {
                 return format(upgradeEffect(this.layer, this.id))+"x"
@@ -135,19 +159,6 @@ addLayer("l", {
     // update() {
     //     console.log(.toString() === "NaN")
     // },
-    getM4Gain() {
-        // see m4 desc
-        let circles = player.points
-        let mc = player.mc.points
-        let cap = dec(10)
-        let out = softcap(
-            Decimal.max(mc.div(circles, 1).log10(), 1),
-            cap,
-            dec(1e-1)
-        )
-        
-        return out
-    },
     milestones: {
         1: {
             requirementDescription: "Milestone 1: 10M L",
@@ -180,16 +191,56 @@ addLayer("l", {
         },
         4: {
             requirementDescription: "Milestone 4: 1.4B L",
-            effectDescription() {
-            let mult = layers["l"].getM4Gain()
-            return `Merged Circles significantly boost Triangles. This boost, however, is divided by Circles. This effect can't go under 1x.<br>Effect: ${format(mult)}x`},
+            effect() {
+                let circles = player.points
+                let mc = player.mc.points
+                let cap = dec(10)
+                let out = softcap(
+                    Decimal.max(mc.div(circles, 1).log10(), 1),
+                    cap,
+                    dec(1e-1)
+                );
+                return out
+            },
+            effectDescription() {return `Merged Circles significantly boost Triangles and Squares. This boost, however, is divided by Circles. This effect can't go under 1x.<br>Effect: ${format(getMilestoneEffect(this.layer, this.id))}x`},
             done() { return player[this.layer].points.gte(1.4e9) },
             unlocked() { return player[this.layer].milestonesUnlocked },
         },
         5: {
-            requirementDescription: "Milestone 5: 9.99B L",
+            requirementDescription: "Milestone 5: 99.99B L",
             effectDescription: "Merged Circle's buyables no longer take away MC.",
-            done() { return player[this.layer].points.gte(9.99e9) },
+            done() { return player[this.layer].points.gte(99.99e9) },
+            unlocked() { return player[this.layer].milestonesUnlocked },
+        },
+        6: {
+            requirementDescription: "Milestone 6: 50T L",
+            effectDescription: "Linify unlocks a new buyable.",
+            done() { return player[this.layer].points.gte(5e13) },
+            unlocked() { return player[this.layer].milestonesUnlocked },
+        },
+        7: {
+            requirementDescription: "Milestone 7: 700qd L",
+            effectDescription: "3x Squares.",
+            done() { return player[this.layer].points.gte(7e17) },
+            unlocked() { return player[this.layer].milestonesUnlocked },
+        },
+        8: {
+            requirementDescription: "Milestone 8: 25sx L",
+            effectDescription() {return `Lines barely boost Squares.<br>Effect: ${format(getMilestoneEffect(this.layer, this.id))}x`},
+            effect() {
+                let l = player.l.points
+                return softcap(
+                    l.log10().div(25),
+                    5, 0.1
+                )
+            },
+            done() { return player[this.layer].points.gte(2.5e22) },
+            unlocked() { return player[this.layer].milestonesUnlocked },
+        },
+        9: {
+            requirementDescription: "Milestone 9: 120O L",
+            effectDescription: `Unlocks two Merged Circle upgrades. Must own MC's Upgrade 2:3 to view.`,
+            done() { return player[this.layer].points.gte(1.2e29) },
             unlocked() { return player[this.layer].milestonesUnlocked },
         },
         // 3: {
@@ -211,6 +262,31 @@ addLayer("l", {
         //     unlocked() { return player[this.layer].milestonesUnlocked },
         // },
     },
+    buyables: {
+        11: {
+            base: dec(500),
+            growth: dec(1.5),
+            scale: dec(1.05),
+            cost(x) { return safedec(
+                this.base.mul(this.growth.pow(x))).mul(this.scale.mul(x))
+            },
+            title() { return `Perfect Squares (${format(getBuyableAmount(this.layer, this.id))})`},
+            display() { return `[Cost: ${format(this.cost(getBuyableAmount(this.layer, this.id)))} L]\nEffect: ${format(this.effect())}x Squares` },
+            effect(x) { return x.gte(1) ?  softcap(x.times(2), new Decimal(5), new Decimal(0.25)) : dec() },
+            canAfford() { return player[this.layer].points.gte(this.cost()) },
+            buy() {
+                // if (!(hasMilestone("l", 5))) {
+                    player[this.layer].points = player[this.layer].points.sub(this.cost())
+                // }
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            buyMax() {
+                geometricBuyMax(this)
+            },
+
+            purchaseLimit() {return new Decimal(500)},
+        },
+    },
     tabFormat: {
         "Main": {
             content: [
@@ -219,13 +295,17 @@ addLayer("l", {
                 "resource-display",
             ]
         },
-        "Upgades": {
+        "Upgrades": {
             content: [
                 "main-display",
                 ["display-text", function() {
                     return "Upgrades"   
                 }, {"font-size": "32px",}],
                 "upgrades",
+                ["display-text", function() {
+                    return hasMilestone("l", 5) ? "Buyables" : null   
+                }, {"font-size": "32px",}],
+                "buyables"
             ]
         },
         "Milestones": {

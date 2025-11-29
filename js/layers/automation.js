@@ -3,8 +3,15 @@ addLayer("a", {
         unlocked: false,
         automation: {
             mc: {
+                unlocked: true,
                 upgrades: false,
+                buyables: false,
             },
+            l: {
+                unlocked: false,
+                upgrades: false,
+                buyables: false,
+            }
         },                
     }},
     
@@ -45,20 +52,69 @@ addLayer("a", {
     // update(diff) {
     //     console.log(player.a.automation.mc.upgrades)
     // },
-
+    microtabs: {
+        main: {
+            "Merged Circles": {
+                content: [
+                    "break",
+                    ["display-text","Merged Circles", {"font-size": "32px"}],
+                    ["row", [
+                        ["display-text","Upgrades:", {"font-size": "14px"}],
+                        "blank",
+                        ["toggle", ["a", "automation.mc.upgrades"]],
+                    ]],
+                    ["row", [
+                        ["display-text","Buyables:", {"font-size": "14px"}],
+                        "blank",
+                        ["toggle", ["a", "automation.mc.buyables"]],
+                    ]],
+                ]
+            },
+            "Linify": {
+                content: [
+                    "break",
+                    ["display-text","Linify", {"font-size": "32px"}],
+                    ["row", [
+                        ["display-text","Upgrades:", {"font-size": "14px"}],
+                        "blank",
+                        ["toggle", ["a", "automation.l.upgrades"]],
+                    ]],
+                     ["row", [
+                        ["display-text","Buyables:", {"font-size": "14px"}],
+                        "blank",
+                        ["toggle", ["a", "automation.l.buyables"]],
+                    ]],
+                ],
+                unlocked() {
+                    return player.a.automation.l.unlocked
+                }
+            }
+        }
+    },
     tabFormat: {
+        
         "Main": {
             content: [
-                "break",
-                ["display-text","Merged Circles", {"font-size": "32px"}],
-                ["row", [
-                    ["display-text","Upgrades:", {"font-size": "14px"}],
-                    "blank",
-                    ["toggle", ["a", "automation.mc.upgrades"]],
-                ]]
+                ["microtabs", "main"]
+
+                // ["display-text","Merged Circles", {"font-size": "32px"}],
+                // ["row", [
+                //     ["display-text","Upgrades:", {"font-size": "14px"}],
+                //     "blank",
+                //     ["toggle", ["a", "automation.mc.upgrades"]],
+                // ]],
+                // "break",
+                // ["display-text","Linify", {"font-size": "32px"}],
+                // ["row", [
+                //     ["display-text","Upgrades:", {"font-size": "14px"}],
+                //     "blank",
+                //     ["toggle", ["a", "automation.mc.upgrades"]],
+                // ]]
             ]
         }
     },
+
+
 
 })
 

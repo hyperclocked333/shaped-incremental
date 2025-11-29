@@ -1,3 +1,32 @@
+// member count
+
+// var dsmc = 1
+// function discordServerMemberCount() {
+// 	return dec(dsmc)
+// }
+
+// async function fetchServerData() {
+//   const url = "https://discordapp.com/api/invite/hC9kMbgpmp";
+//   try {
+//     const response = await fetch(url);
+//     if (!response.ok) {
+//       throw new Error(`Response status: ${response.status}`);
+//     }
+
+//     const result = await response.json();
+// 	return result
+//   } catch (error) {
+//     console.error(error.message);
+//   }
+// }
+
+// setTimeout(() => {
+// 	let serverData = fetchServerData()
+// 	if (serverData) {console.log(serverData["member_count"]); return dsmc = serverData["member_count"]}
+// }, 10000);
+
+// discordServerMemberCount()
+
 // ************ Big Feature related ************
 
 function respecBuyables(layer) {

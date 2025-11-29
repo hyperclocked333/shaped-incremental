@@ -24,6 +24,10 @@ let electricity = addLayer("e", {
         .times( hasUpgrade("t", 33), 3 )
         .times( hasUpgrade("t", 32), upgradeEffect("t", 32) )
 		.times( hasUpgrade("c", 14), 3 )
+        .times( hasUpgrade("c", 23), upgradeEffect("c", 23) )
+		.div(hasUpgrade("c", 34), 3)
+        .div(hasUpgrade("c", 42), upgradeEffect("c", 42).log2())
+        .times(hasUpgrade("c", 53) && hasUpgrade("c", 33), 3)
 
         return mult.get()
     },
@@ -39,16 +43,23 @@ let electricity = addLayer("e", {
         return mult
     },
     update(diff) {
+        let out;
         switch (true) {
+            case (hasUpgrade("c", 51)):
+                out = dec(575)
+                break;
             case (hasUpgrade("l", 42)):
-                player[this.layer].wattcap = new Decimal(250)
+                out = dec(250)
                 break;
             case (hasUpgrade("l", 32)):
-                player[this.layer].wattcap = new Decimal(75)
+                out = dec(75)
                 break;
             default:
+                out = dec(10)
                 break;
         }
+        if (hasUpgrade("c", 53) && hasUpgrade("c", 33)) { out = out.times(upgradeEffect("c", 53)[1]) }
+        player[this.layer].wattcap = out.floor()
     },
     clickables: {
         11: {
@@ -126,6 +137,23 @@ let electricity = addLayer("e", {
             done() { return player[this.layer].points.gte(100) },
             onComplete() { player.a.unlocked = true },
         },
+        6: {
+            requirementDescription: "Milestone 6: 175W",
+            effectDescription() {return `4x Merged Circles and Squares.`},
+            done() { return player[this.layer].points.gte(175) }
+        },
+        7: {
+            requirementDescription: "Milestone 7: 265W",
+            effectDescription() {return `Unlocks Linify buyable automation.`},
+            done() { return player[this.layer].points.gte(265) },
+            onComplete() { player.a.automation.l.unlocked = true, player.a.automation.l.buyables = true }
+        },
+        8: {
+            requirementDescription: "Milestone 8: 500W",
+            effectDescription() {return `Unlocks Linify upgrade automation. 1.33x Squares and Trianlges`},
+            done() { return player[this.layer].points.gte(500) },
+            onComplete() { player.a.automation.l.upgrades = true }
+        },
     },
     tabFormat: {
         "Generator": {
@@ -136,7 +164,7 @@ let electricity = addLayer("e", {
                             str += " (OVERCHARGED)"
                         }; return str
                 }],
-                "clickables",
+                "clickables", 
                 ["display-text", function() {
                     return `Average Wire Watt Handing Capacity: ${player[this.layer].wattcap}W`
                 }],

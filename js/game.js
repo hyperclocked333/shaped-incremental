@@ -30,13 +30,57 @@ function prettifyResourceName(layer, exactString = null) {
 }
 
 
+function geometricBuyMax(upgrade, pricelessCondition) {
+	let n = getBuyableAmount(upgrade.layer, upgrade.id)
+	let b = upgrade.base
+	let g = upgrade.growth
+	let points = player[upgrade.layer].points
+	if (points.lt(upgrade.cost(n))) return
+
+	let inside = points.mul(g.sub(1)).div(b.mul(g.pow(n))).add(1)
+	let k = inside.log(g).floor()
+
+	if (k.lte(0)) return
+
+	let totalCost = b.mul(g.pow(n)).mul(g.pow(k).sub(1)).div(g.sub(1))
+	if (this.scale) totalCost = totalCost.mul(this.scale.mul(n))
+	
+	if (!pricelessCondition) {
+		player[upgrade.layer].points = points.sub(totalCost)
+	}
+
+	setBuyableAmount(upgrade.layer, upgrade.id, n.add(k))
+}
+
+
 /**
  * returns a be decimal
  * @param {number|string} number defualt: 1
+ * @param {object} config min = |number|, max = |number|
  * @returns {Decimal}
  */
-function dec(number = 1) {
-	return new Decimal(number)
+function dec(number = 1, config = {}) {
+	let n = new Decimal(number)
+
+	if (config.min) {n = Decimal.min(n, config.min)}
+	if (config.max) {n = Decimal.max(n, config.max)}
+
+	return n
+}
+
+/**
+ * a safe decimal function that will always return at least 1
+ * @param {number|string} number defualt: 1
+ * @param {object} config min = |number|, max = |number|
+ * @returns {Decimal}
+ */
+function safedec(number = 1) {
+	if (isNaN(dec(number).toNumber())) {return dec()};
+	return Decimal.max(dec(number), dec())
+}
+
+function hasBuyable(layer, id) {
+	return getBuyableAmount(layer, id).gt(0) === true
 }
 
 /**
@@ -144,6 +188,9 @@ function getNextAt(layer, canMax=false, useType = null) {
 	}}
 
 function softcap(value, cap, power = 0.5) {
+	// let value, cap, power = [dec(value), dec(cap), dec(power)]
+	// console.log(value)
+	value = dec(value); cap = dec(cap); power = dec(power)
 	if (value.lte(cap)) return value
 	else
 		return value.pow(power).times(cap.pow(decimalOne.sub(power)))

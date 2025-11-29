@@ -107,3 +107,8 @@
   animation: neonPulse 2s infinite;
   font-weight: bold;
 }
+
+.tinted-color {
+  background-image: linear-gradient(rgba(255, 0, 0, 0.5), rgba(255, 0, 0, 0.5)), url('your-image.jpg');
+  background-size: cover;
+}

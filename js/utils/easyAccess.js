@@ -6,6 +6,15 @@ function hasMilestone(layer, id) {
 	return ((player[layer].milestones.includes(toNumber(id)) || player[layer].milestones.includes(id.toString())) && !tmp[layer].deactivated)
 }
 
+function getMilestoneEffect(layer, id) {
+	if (tmp[layer].deactivated) return
+	if (layers[layer].milestones[toNumber(id)]?.effect) {
+		return layers[layer].milestones[toNumber(id)].effect()
+	}
+	console.error(`[CRITIAL ERROR]: milestone ${id} in layer ${layer} does not have a effect, but is called anyways.`)
+	return false
+}
+
 function hasAchievement(layer, id) {
 	return ((player[layer].achievements.includes(toNumber(id)) || player[layer].achievements.includes(id.toString())) && !tmp[layer].deactivated)
 }

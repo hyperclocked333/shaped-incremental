@@ -7,12 +7,14 @@ function loaderGetFolderList(files, folder) {
 }
 
 const layersPaths = [
+	"achievements.js",
 	"mergecircles.js",
 	"linify.js",
 	"electricity.js",
 	"cubify.js",
 	"triangulate.js",
 	"automation.js",
+	"pentaline.js",
 ]
 
 const modInfo = {
@@ -23,19 +25,20 @@ const modInfo = {
 	discordName: "Discord",
 	discordLink: "https://discord.com/invite/hC9kMbgpmp",
 	initialStartPoints: new Decimal (0), // Used for hard resets and new players
-	offlineLimit: 24,  // In hours
+	offlineLimit: 1,  // In hours
 }
 
 // Set your version in num and name
-let VERSION = {
-	num: "0.0",
+const VERSION = {
+	num: "0.2",
 	name: "INDEV",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h3>v0.0</h3><br>
-		- Added things.<br>
-		- Added stuff.`
+	<h3>v${VERSION.num}: ${VERSION.name}</h3><br>
+		- fixed up some stuff with the milestones<br>
+		- codebase improved<br>
+		- upgrades is now spelled correctly`
 
 let winText = `go away you win`
 
@@ -65,7 +68,7 @@ function getPointGen() {
 			.times(hasUpgrade("l", 12), upgradeEffect("l", 12))
 			.times(hasUpgrade("mc", 11), 5)
 			.times(hasUpgrade("l", 21), 33)
-			.times(buyableEffect("mc", 11), buyableEffect("mc", 11))
+			.times(hasBuyable("mc", 11), buyableEffect("mc", 11))
 			.times(hasMilestone("mc", 6), softcap(new Decimal(1.01).times(player.mc.points), dec(300), dec(0.05)))
 			.times(!hasMilestone("mc", 6) && hasMilestone("mc", 2), softcap(dec(1.01).times(player.mc.points), dec(50), dec(0.1)))
 			.times(hasMilestone("e", 1), 5)
@@ -78,10 +81,18 @@ function getPointGen() {
 			.times(hasMilestone("mc", 5), 9)
 			.times(hasMilestone("t", 2), 12)
 			.times(hasUpgrade("t", 33), upgradeEffect("t", 33))
-			.times(hasMilestone("t", 3), layers.t.getM4Softcap())
+			.times(hasMilestone("t", 3), getMilestoneEffect("t", 3))
 			.times(hasMilestone("l", 3), 8.1)
 			.times(hasUpgrade("c", 11), 3)
-
+			.times(hasUpgrade("c", 33), 33333)
+			.div(hasUpgrade("c", 31), 5)
+            .times(hasUpgrade("c", 34), 20)
+        	.div(hasUpgrade("c", 43), upgradeEffect("c", 43).div(1e3))
+        	.times(hasUpgrade("c", 44), upgradeEffect("c", 44))
+			.times(hasUpgrade("c", 53), hasUpgrade("c", 33) ? 15 : 5)
+            .times(hasMilestone("t", 11), 4)
+            .times(hasMilestone("t", 12), 7)
+			.times(hasMilestone("t", 13), 10)
 return gain.get()
 
 
